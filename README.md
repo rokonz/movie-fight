@@ -15,3 +15,6 @@
 
 ---
 
+## Movie Data
+
+Free API for movie data: [OMDb API](http://omdbapi.com/)
