@@ -11,18 +11,60 @@ async function fetchData(searchTerm) {
         }
     });
 
-    console.log(response.data);
-    // response object has many properties,
-    // data is where the api response data is available
+    if (response.data.Error)
+        return [];
+    return response.data.Search;
+    // returning the search results.
 }
+
+// placing the html structure in JS to achive de-coupling & reusuablity.
+const appElement = document.getElementById('app');
+appElement.innerHTML = `
+    <label>Search for a Movie</label>
+    <input type="text" id="search-field" class="app__input" />
+    <div class="dropdown"></div>
+`;
 
 // getting the user input
 const inputElement = document.getElementById('search-field');
+const dropdownElement = document.querySelector('.dropdown');
 
 let timeoutId = 0;
-const onInput = event => {
+const onInput = async event => {
     // we could call debounce() & pass this function also.
-    fetchData(event.target.value);
+    const movies = await fetchData(event.target.value);
+    if (!movies.length) {
+        dropdownElement.classList.remove('active');
+        return;
+    }
+
+    dropdownElement.innerHTML = '';
+    dropdownElement.classList.add('active');
+
+    // Completed the auto completion
+    for (const movie of movies) {
+        const option = document.createElement('a');
+        const imgSrc = movie.Poster === 'N/A' ? '' : movie.Poster;
+
+        option.href = '#';
+        option.classList.add('dropdown__item');
+        option.innerHTML = `
+            <img src="${imgSrc}" />
+            ${movie.Title}
+        `;
+
+        option.addEventListener('click', () => {
+            dropdownElement.classList.remove('active');
+            inputElement.value = movie.Title;
+        });
+
+        dropdownElement.appendChild(option);
+    }
 };
 
 inputElement.addEventListener('input', debounce(onInput, 700));
+
+document.addEventListener('click', event => {
+    if (!appElement.contains(event.target))
+        dropdownElement.classList.remove('active');
+});
